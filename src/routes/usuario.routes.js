@@ -1,38 +1,22 @@
-const express = require("express");
+const { Router } = require('express');
+const {
+  obtenerUsuarios,
+  obtenerUsuarioPorId,
+  crearUsuario,
+  actualizarUsuario,
+  eliminarUsuario,
+  resetearPassword,
+  cambiarEstadoUsuario
+} = require('../controllers/usuario.controller');
 
-const router = express.Router();
+const router = Router();
 
-router.get("/", (req, res) => {
-    res.json({
-        mensaje: "Obtener todos los usuarios"
-    });
-});
-
-router.get("/:id", (req, res) => {
-    res.json({
-        mensaje: "Obtener usuario",
-        id: req.params.id
-    });
-});
-
-router.post("/", (req, res) => {
-    res.json({
-        mensaje: "Crear usuario"
-    });
-});
-
-router.put("/:id", (req, res) => {
-    res.json({
-        mensaje: "Actualizar usuario",
-        id: req.params.id
-    });
-});
-
-router.delete("/:id", (req, res) => {
-    res.json({
-        mensaje: "Eliminar usuario",
-        id: req.params.id
-    });
-});
+router.get('/', obtenerUsuarios);
+router.get('/:id', obtenerUsuarioPorId);
+router.post('/', crearUsuario);
+router.put('/:id', actualizarUsuario);
+router.delete('/:id', eliminarUsuario);
+router.put('/:id/password', resetearPassword);
+router.put('/:id/estado', cambiarEstadoUsuario);
 
 module.exports = router;

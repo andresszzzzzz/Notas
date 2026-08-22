@@ -28,6 +28,13 @@ const institucionSchema = new mongoose.Schema({
   logo: {
     type: String
   },
+  imagenes: {
+    escudo: { type: String },
+    firmaRector: { type: String },
+    firmaSecretaria: { type: String },
+    carnetFrente: { type: String },
+    carnetAtras: { type: String }
+  },
   dane: {
     type: String,
     trim: true
@@ -61,6 +68,32 @@ const institucionSchema = new mongoose.Schema({
     aproximaPromedio: {
       type: Boolean,
       default: true
+    },
+    notaHabilitaciones: {
+      type: Number,
+      default: 3.0
+    },
+    porcentajeHabilitaciones: {
+      type: Number,
+      default: 60
+    },
+    anoLectivo: {
+      type: Number
+    },
+    ligaCalificacion: {
+      type: Boolean,
+      default: false
+    },
+    ligaPeriodo: {
+      type: Boolean,
+      default: false
+    },
+    fotoEstudiante: {
+      type: Boolean,
+      default: true
+    },
+    actaRecuperacion: {
+      type: String
     },
     niveles: [{
       orden: Number,

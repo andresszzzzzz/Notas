@@ -1,252 +1,31 @@
 const express = require("express");
 const router = express.Router();
 
-const AnioAcademico = require("../models/AnioAcademico");
+const {
+  obtenerAnios,
+  obtenerAniosPorInstitucion,
+  obtenerAnioPorId,
+  crearAnio,
+  actualizarAnio,
+  eliminarAnio,
+  obtenerAniosPorEstado,
+  agregarPeriodo,
+  actualizarPeriodo,
+  eliminarPeriodo,
+} = require("../controllers/anioacademico.controller");
 
-// ======================================
-// Obtener todos los años académicos
-// ======================================
-router.get("/", async (req, res) => {
-  try {
-    const anios = await AnioAcademico.find()
-      .populate("institucionId", "nombre")
-      .sort({ anio: -1 });
+// Endpoints Principales
+router.get("/", obtenerAnios);
+router.get("/institucion/:institucionId", obtenerAniosPorInstitucion);
+router.get("/estado/:estado", obtenerAniosPorEstado);
+router.get("/:id", obtenerAnioPorId);
+router.post("/", crearAnio);
+router.put("/:id", actualizarAnio);
+router.delete("/:id", eliminarAnio);
 
-    res.json(anios);
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener los años académicos",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Obtener años por institución
-// ======================================
-router.get("/institucion/:institucionId", async (req, res) => {
-  try {
-    const anios = await AnioAcademico.find({
-      institucionId: req.params.institucionId,
-    }).sort({ anio: -1 });
-
-    res.json(anios);
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener los años académicos",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Obtener año académico por ID
-// ======================================
-router.get("/:id", async (req, res) => {
-  try {
-    const anio = await AnioAcademico.findById(req.params.id)
-      .populate("institucionId", "nombre");
-
-    if (!anio) {
-      return res.status(404).json({
-        mensaje: "Año académico no encontrado",
-      });
-    }
-
-    res.json(anio);
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al buscar el año académico",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Crear año académico
-// ======================================
-router.post("/", async (req, res) => {
-  try {
-    const nuevoAnio = new AnioAcademico(req.body);
-    await nuevoAnio.save();
-
-    res.status(201).json({
-      mensaje: "Año académico creado correctamente",
-      anioAcademico: nuevoAnio,
-    });
-  } catch (error) {
-    res.status(400).json({
-      mensaje: "Error al crear el año académico",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Actualizar año académico
-// ======================================
-router.put("/:id", async (req, res) => {
-  try {
-    const anio = await AnioAcademico.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    if (!anio) {
-      return res.status(404).json({
-        mensaje: "Año académico no encontrado",
-      });
-    }
-
-    res.json({
-      mensaje: "Año académico actualizado correctamente",
-      anioAcademico: anio,
-    });
-  } catch (error) {
-    res.status(400).json({
-      mensaje: "Error al actualizar el año académico",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Eliminar año académico
-// ======================================
-router.delete("/:id", async (req, res) => {
-  try {
-    const anio = await AnioAcademico.findByIdAndDelete(req.params.id);
-
-    if (!anio) {
-      return res.status(404).json({
-        mensaje: "Año académico no encontrado",
-      });
-    }
-
-    res.json({
-      mensaje: "Año académico eliminado correctamente",
-    });
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al eliminar el año académico",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Obtener año académico activo
-// ======================================
-router.get("/estado/:estado", async (req, res) => {
-  try {
-    const anios = await AnioAcademico.find({
-      estado: req.params.estado,
-    }).populate("institucionId", "nombre");
-
-    res.json(anios);
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener los años académicos",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Agregar un período
-// ======================================
-router.post("/:id/periodos", async (req, res) => {
-  try {
-    const anio = await AnioAcademico.findById(req.params.id);
-
-    if (!anio) {
-      return res.status(404).json({
-        mensaje: "Año académico no encontrado",
-      });
-    }
-
-    anio.cronograma.periodos.push(req.body);
-    await anio.save();
-
-    res.status(201).json({
-      mensaje: "Período agregado correctamente",
-      periodos: anio.cronograma.periodos,
-    });
-  } catch (error) {
-    res.status(400).json({
-      mensaje: "Error al agregar el período",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Actualizar un período
-// ======================================
-router.put("/:id/periodos/:periodoId", async (req, res) => {
-  try {
-    const anio = await AnioAcademico.findById(req.params.id);
-
-    if (!anio) {
-      return res.status(404).json({
-        mensaje: "Año académico no encontrado",
-      });
-    }
-
-    const periodo = anio.cronograma.periodos.id(req.params.periodoId);
-
-    if (!periodo) {
-      return res.status(404).json({
-        mensaje: "Período no encontrado",
-      });
-    }
-
-    Object.assign(periodo, req.body);
-
-    await anio.save();
-
-    res.json({
-      mensaje: "Período actualizado correctamente",
-      periodo,
-    });
-  } catch (error) {
-    res.status(400).json({
-      mensaje: "Error al actualizar el período",
-      error: error.message,
-    });
-  }
-});
-
-// ======================================
-// Eliminar un período
-// ======================================
-router.delete("/:id/periodos/:periodoId", async (req, res) => {
-  try {
-    const anio = await AnioAcademico.findById(req.params.id);
-
-    if (!anio) {
-      return res.status(404).json({
-        mensaje: "Año académico no encontrado",
-      });
-    }
-
-    anio.cronograma.periodos.pull(req.params.periodoId);
-
-    await anio.save();
-
-    res.json({
-      mensaje: "Período eliminado correctamente",
-    });
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al eliminar el período",
-      error: error.message,
-    });
-  }
-});
+// Endpoints de Períodos
+router.post("/:id/periodos", agregarPeriodo);
+router.put("/:id/periodos/:periodoId", actualizarPeriodo);
+router.delete("/:id/periodos/:periodoId", eliminarPeriodo);
 
 module.exports = router;

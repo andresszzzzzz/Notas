@@ -1,0 +1,19 @@
+const express = require('express');
+const router = express.Router();
+
+const {
+  obtenerConceptos,
+  obtenerConceptoPorId,
+  crearConcepto,
+  actualizarConcepto,
+  eliminarConcepto,
+} = require('../controllers/conceptoscontables.controller');
+
+// Endpoints de Conceptos Contables
+router.get('/', obtenerConceptos);
+router.get('/:id', obtenerConceptoPorId);
+router.post('/', crearConcepto);
+router.put('/:id', actualizarConcepto);
+router.delete('/:id', eliminarConcepto);
+
+module.exports = router;

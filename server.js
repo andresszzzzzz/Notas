@@ -1,83 +1,56 @@
 require("dotenv").config();
 
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+
+const connectDB = require("./src/config/database");
+const modelos = require("./src/models");
+const routes = require("./src/routes");
+const { manejadorErrores, rutaNoEncontrada } = require("./src/middlewares/errorHandler");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
+// Middlewares de seguridad y utilidad
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const routes = require("./src/routes");
+// Límite de intentos de login para mitigar fuerza bruta
+const limitadorLogin = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10,
+  message: { mensaje: "Demasiados intentos de inicio de sesión. Intenta de nuevo en unos minutos." }
+});
+app.use("/api/auth/login", limitadorLogin);
+
+// Ruta de prueba
+app.get("/", (req, res) => {
+  res.json({
+    mensaje: "Bienvenido a la API de EasyNotes",
+    estado: "Servidor funcionando correctamente"
+  });
+});
+
 app.use("/api", routes);
+
+// 404 y manejo centralizado de errores (siempre al final)
+app.use(rutaNoEncontrada);
+app.use(manejadorErrores);
 
 const startServer = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
+    await connectDB();
 
-    console.log(`[OK] MongoDB Conectado: ${mongoose.connection.host}`);
-    console.log(`[INFO] Base de datos: ${mongoose.connection.name}`);
-
-    // Ruta de prueba
-    app.get("/", (req, res) => {
-      res.json({
-        mensaje: "Bienvenido a la API de EasyNotes",
-        estado: "Servidor funcionando correctamente"
-      });
-    });
-
-    // Mostrar modelos disponibles
     console.log("\nModelos registrados:");
-    const modelFiles = [
-      "Actividad",
-      "AnioAcademico",
-      "Area",
-      "Asignatura",
-      "Bitacora",
-      "Calificacion",
-      "CargaAcademica",
-      "Catalogo",
-      "Comunicados",
-      "Comunicado",
-      "ConceptosContables",
-      "DireccionNucleo",
-      "Elecciones",
-      "EventoElectoral",
-      "Excusas",
-      "Grupo",
-      "Indicador",
-      "Institucion",
-      "Matricula",
-      "Observador",
-      "Pagos",
-      "Prematricula",
-      "Sede",
-      "SolicitudRegistro",
-      "Usuario",
-      "Voto"
-    ];
+    Object.keys(modelos).forEach(nombreModelo => console.log(`   - ${nombreModelo}`));
 
-    modelFiles.forEach(model => console.log(`   - ${model}`));
-
-    const stats = await mongoose.connection.db.stats();
-
-    console.log("\n[INFO] Estadísticas:");
-    console.log(`   Documentos: ${stats.objects}`);
-    console.log(`   Tamaño: ${(stats.dataSize / 1024).toFixed(1)} KB`);
-
-    // Iniciar Express
     app.listen(PORT, () => {
       console.log(`\n[OK] API ejecutándose en http://localhost:${PORT}`);
     });
-
   } catch (error) {
     console.error("[ERROR]", error.message);
     process.exit(1);

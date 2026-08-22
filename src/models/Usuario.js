@@ -1,16 +1,57 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { ROLES, ESTADOS_USUARIO, TIPOS_DOCUMENTO, GENEROS } = require('../config/constants');
+
+// tipoPerfil: roles del sistema (ver PLAN_MIGRACION, sección 1.2)
+const ROLES = ['estudiante', 'docente', 'acudiente', 'admin', 'rector', 'coordinador', 'dirNucleo'];
+
+const relacionEstudianteSchema = new mongoose.Schema({
+  acudienteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Usuario',
+    required: true
+  },
+  parentesco: {
+    type: String,
+    trim: true
+  }
+}, { _id: false });
+
+const relacionAcudienteSchema = new mongoose.Schema({
+  estudianteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Usuario',
+    required: true
+  },
+  parentesco: {
+    type: String,
+    trim: true
+  },
+  nombre: {
+    type: String,
+    trim: true
+  }
+}, { _id: false });
 
 const usuarioSchema = new mongoose.Schema({
+  // Nula únicamente para el rol dirNucleo, que no pertenece a un colegio.
+  institucionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institucion',
+    default: null
+  },
+  // Solo se usa cuando tipoPerfil = 'dirNucleo'.
+  nucleoId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DireccionNucleo',
+    default: null
+  },
   tipoDocumento: {
     type: String,
-    enum: TIPOS_DOCUMENTO,
-    required: true
+    enum: ['CC', 'TI', 'CE', 'RC', 'PA'],
+    default: 'CC'
   },
   documento: {
     type: String,
-    required: true,
     trim: true
   },
   nombres: {
@@ -23,30 +64,14 @@ const usuarioSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  nombreCompleto: {
-    type: String,
-    trim: true
-  },
   email: {
     type: String,
+    required: true,
+    unique: true,
     trim: true,
     lowercase: true
   },
   telefono: {
-    type: String,
-    trim: true
-  },
-  celular: {
-    type: String,
-    trim: true
-  },
-  estrato: {
-    type: Number,
-    min: 0,
-    max: 6,
-    default: 0
-  },
-  eps: {
     type: String,
     trim: true
   },
@@ -57,103 +82,86 @@ const usuarioSchema = new mongoose.Schema({
   fechaNacimiento: {
     type: Date
   },
+  lugarNacimiento: {
+    type: String,
+    trim: true
+  },
   genero: {
     type: String,
-    enum: GENEROS
+    enum: ['M', 'F', 'Otro'],
   },
   foto: {
     type: String
   },
-  firma: {
-    type: String
-  },
   tipoPerfil: {
     type: String,
-    enum: Object.values(ROLES),
+    enum: ROLES,
     required: true
   },
-  institucionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Institucion'
-  },
-  nucleoId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'DireccionNucleo'
-  },
+  // Solo aplica cuando tipoPerfil = 'estudiante'.
+  acudientes: [relacionEstudianteSchema],
+  // Solo aplica cuando tipoPerfil = 'acudiente'.
+  estudiantes: [relacionAcudienteSchema],
   credenciales: {
     usuario: {
       type: String,
       required: true,
-      unique: true,
-      trim: true
+      trim: true,
+      lowercase: true
     },
     passwordHash: {
       type: String,
-      required: true
+      required: true,
+      select: false
     },
     debeCambiarPassword: {
       type: Boolean,
-      default: false
+      default: true
     },
     ultimoLogin: {
       type: Date
-    },
-    tokenRecuperacion: {
-      type: String
-    },
-    tokenRecuperacionExpira: {
-      type: Date
     }
   },
-  estudiantes: [{
-    estudianteId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Usuario'
-    },
-    parentesco: {
-      type: String,
-      trim: true
-    },
-    nombre: {
-      type: String,
-      trim: true
-    }
-  }],
-  acudientes: [{
-    acudienteId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Usuario'
-    },
-    parentesco: {
-      type: String,
-      trim: true
-    }
-  }],
   estado: {
     type: String,
-    enum: Object.values(ESTADOS_USUARIO),
+    enum: ['activo', 'inactivo'],
     default: 'activo'
   }
 }, {
   timestamps: true
 });
 
-usuarioSchema.index({ institucionId: 1, documento: 1 }, { unique: true });
-usuarioSchema.index({ institucionId: 1, 'credenciales.usuario': 1 });
-usuarioSchema.index({ nucleoId: 1, 'credenciales.usuario': 1 });
+usuarioSchema.virtual('nombreCompleto').get(function () {
+  return `${this.nombres} ${this.apellidos}`.trim();
+});
+usuarioSchema.set('toJSON', { virtuals: true });
+usuarioSchema.set('toObject', { virtuals: true });
 
-usuarioSchema.pre('save', function(next) {
-  this.nombreCompleto = `${this.nombres} ${this.apellidos}`.trim();
-  next();
+// Únicos, pero permitiendo null en institucionId (rol dirNucleo).
+usuarioSchema.index(
+  { institucionId: 1, documento: 1 },
+  { unique: true, partialFilterExpression: { documento: { $type: 'string' } } }
+);
+usuarioSchema.index({ institucionId: 1, 'credenciales.usuario': 1 }, { unique: true, sparse: true });
+usuarioSchema.index({ nucleoId: 1, 'credenciales.usuario': 1 }, { unique: true, sparse: true });
+usuarioSchema.index({ institucionId: 1, tipoPerfil: 1 });
+
+// Si llega una contraseña en texto plano en credenciales.passwordHash, se
+// encripta automáticamente antes de guardar.
+usuarioSchema.pre('save', async function (next) {
+  if (!this.isModified('credenciales.passwordHash')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.credenciales.passwordHash = await bcrypt.hash(this.credenciales.passwordHash, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
-usuarioSchema.methods.comparePassword = async function(password) {
-  return bcrypt.compare(password, this.credenciales.passwordHash);
-};
-
-usuarioSchema.statics.hashPassword = async function(password) {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
+usuarioSchema.methods.compararPassword = function (passwordPlano) {
+  return bcrypt.compare(passwordPlano, this.credenciales.passwordHash);
 };
 
 module.exports = mongoose.model('Usuario', usuarioSchema);
