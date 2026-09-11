@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerAsignaturas,
@@ -10,6 +11,8 @@ const {
   obtenerAsignaturasPorInstitucion,
   obtenerAsignaturasPorArea,
 } = require("../controllers/asignatura.controller");
+
+router.use(verificarToken);
 
 // Endpoints de Asignaturas
 router.get("/", obtenerAsignaturas);

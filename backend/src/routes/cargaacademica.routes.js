@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerCargasAcademicas,
@@ -8,6 +9,8 @@ const {
   actualizarCargaAcademica,
   eliminarCargaAcademica,
 } = require('../controllers/cargaacademica.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Cargas Académicas
 router.get('/', obtenerCargasAcademicas);

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerCalificaciones,
@@ -8,6 +9,8 @@ const {
   actualizarCalificacion,
   eliminarCalificacion,
 } = require('../controllers/calificacion.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Calificaciones
 router.get('/', obtenerCalificaciones);

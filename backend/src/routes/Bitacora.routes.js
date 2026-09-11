@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerRegistros,
@@ -10,6 +11,8 @@ const {
   crearRegistro,
   eliminarRegistro,
 } = require("../controllers/bitacora.controller");
+
+router.use(verificarToken);
 
 // Endpoints de Bitácora
 router.get("/", obtenerRegistros);

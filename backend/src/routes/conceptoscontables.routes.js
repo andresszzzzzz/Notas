@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerConceptos,
@@ -8,6 +9,8 @@ const {
   actualizarConcepto,
   eliminarConcepto,
 } = require('../controllers/conceptoscontables.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Conceptos Contables
 router.get('/', obtenerConceptos);

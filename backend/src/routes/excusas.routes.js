@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerExcusas,
@@ -8,6 +9,8 @@ const {
   actualizarExcusa,
   eliminarExcusa,
 } = require("../controllers/excusas.controller");
+
+router.use(verificarToken);
 
 // Endpoints de Excusas
 router.get("/", obtenerExcusas);

@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerAnios,
@@ -13,6 +14,8 @@ const {
   actualizarPeriodo,
   eliminarPeriodo,
 } = require("../controllers/anioacademico.controller");
+
+router.use(verificarToken);
 
 // Endpoints Principales
 router.get("/", obtenerAnios);

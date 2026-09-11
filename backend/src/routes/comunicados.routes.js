@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerComunicados,
@@ -8,6 +9,8 @@ const {
   actualizarComunicado,
   eliminarComunicado,
 } = require('../controllers/comunicados.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Comunicados
 router.get('/', obtenerComunicados);

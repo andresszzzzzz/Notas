@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerIndicadores,
   obtenerIndicadorPorId,
@@ -7,6 +8,8 @@ const {
   actualizarIndicador,
   eliminarIndicador,
 } = require("../controllers/indicador.controller");
+
+router.use(verificarToken);
 
 // Endpoints de Indicadores
 router.get("/", obtenerIndicadores);

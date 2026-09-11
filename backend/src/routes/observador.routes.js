@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerObservaciones,
   obtenerObservacionPorId,
@@ -7,6 +8,8 @@ const {
   actualizarObservacion,
   eliminarObservacion,
 } = require('../controllers/observador.controller');
+
+router.use(verificarToken);
 
 // Endpoints del Observador
 router.get('/', obtenerObservaciones);

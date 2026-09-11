@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerGrupos,
@@ -8,6 +9,8 @@ const {
   actualizarGrupo,
   eliminarGrupo,
 } = require("../controllers/grupo.controller");
+
+router.use(verificarToken);
 
 // Endpoints de Grupos
 router.get("/", obtenerGrupos);

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerPrematriculas,
   obtenerPrematriculaPorId,
@@ -7,6 +8,8 @@ const {
   actualizarPrematricula,
   eliminarPrematricula,
 } = require('../controllers/prematricula.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Prematrículas
 router.get('/', obtenerPrematriculas);

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerPagos,
   obtenerPagoPorId,
@@ -7,6 +8,8 @@ const {
   actualizarPago,
   eliminarPago,
 } = require('../controllers/pagos.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Pagos
 router.get('/', obtenerPagos);

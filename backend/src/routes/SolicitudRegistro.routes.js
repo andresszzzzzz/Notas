@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerSolicitudes,
   obtenerSolicitudPorId,
@@ -7,6 +8,8 @@ const {
   actualizarSolicitud,
   eliminarSolicitud,
 } = require('../controllers/solicitudregistro.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Solicitudes de Registro
 router.get('/', obtenerSolicitudes);

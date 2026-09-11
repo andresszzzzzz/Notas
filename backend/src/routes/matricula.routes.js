@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerMatriculas,
   obtenerMatriculaPorId,
@@ -7,6 +8,8 @@ const {
   actualizarMatricula,
   eliminarMatricula,
 } = require('../controllers/matricula.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Matrículas
 router.get('/', obtenerMatriculas);

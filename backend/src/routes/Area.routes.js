@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerAreas,
@@ -10,6 +11,8 @@ const {
   eliminarArea,
   obtenerAreasPorEstado,
 } = require("../controllers/area.controller");
+
+router.use(verificarToken);
 
 // Endpoints de Áreas
 router.get("/", obtenerAreas);

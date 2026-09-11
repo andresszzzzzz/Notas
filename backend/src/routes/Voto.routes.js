@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerVotos,
   obtenerVotoPorId,
@@ -7,6 +8,8 @@ const {
   actualizarVoto,
   eliminarVoto,
 } = require('../controllers/voto.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Votos
 router.get('/', obtenerVotos);

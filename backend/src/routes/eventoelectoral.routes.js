@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerEventosElectorales,
@@ -8,6 +9,8 @@ const {
   actualizarEventoElectoral,
   eliminarEventoElectoral,
 } = require("../controllers/eventoelectoral.controller");
+
+router.use(verificarToken);
 
 // Endpoints de Eventos Electorales
 router.get("/", obtenerEventosElectorales);

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerSedes,
   obtenerSedePorId,
@@ -7,6 +8,8 @@ const {
   actualizarSede,
   eliminarSede,
 } = require('../controllers/sede.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Sedes
 router.get('/', obtenerSedes);

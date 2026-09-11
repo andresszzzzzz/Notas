@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerCatalogos,
@@ -8,6 +9,8 @@ const {
   actualizarCatalogo,
   eliminarCatalogo,
 } = require('../controllers/catalogo.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Catálogos
 router.get('/', obtenerCatalogos);

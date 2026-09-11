@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerActividades,
@@ -12,6 +13,8 @@ const {
   obtenerActividadesPorDocente,
   obtenerActividadesPorPeriodo,
 } = require("../controllers/actividad.controller");
+
+router.use(verificarToken);
 
 // ======================================
 // Endpoints de Actividades

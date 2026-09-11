@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 const {
   obtenerInstituciones,
   obtenerInstitucionPorId,
@@ -7,6 +8,8 @@ const {
   actualizarInstitucion,
   eliminarInstitucion,
 } = require('../controllers/institucion.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Instituciones
 router.get('/', obtenerInstituciones);

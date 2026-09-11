@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verificarToken } = require("../middlewares/auth");
 
 const {
   obtenerDirecciones,
@@ -8,6 +9,8 @@ const {
   actualizarDireccion,
   eliminarDireccion,
 } = require('../controllers/direccionnucleo.controller');
+
+router.use(verificarToken);
 
 // Endpoints de Direcciones de Núcleo
 router.get('/', obtenerDirecciones);
