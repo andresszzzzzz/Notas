@@ -55,6 +55,12 @@ const eventoSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
+  // Grupos que pueden votar en este evento. Vacío = todos los grupos de la
+  // institución pueden votar (sin restricción).
+  gruposHabilitados: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Grupo'
+  }],
   candidatos: [candidatoSchema],
   resultadosPublicos: {
     type: Boolean,

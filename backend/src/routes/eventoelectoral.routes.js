@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { verificarToken } = require("../middlewares/auth");
+const { permitirRoles } = require("../middlewares/roleAuth");
 
 const {
   obtenerEventosElectorales,
@@ -12,11 +13,13 @@ const {
 
 router.use(verificarToken);
 
+const puedeGestionarEventos = permitirRoles("admin", "rector", "coordinador");
+
 // Endpoints de Eventos Electorales
 router.get("/", obtenerEventosElectorales);
 router.get("/:id", obtenerEventoElectoralPorId);
-router.post("/", crearEventoElectoral);
-router.put("/:id", actualizarEventoElectoral);
-router.delete("/:id", eliminarEventoElectoral);
+router.post("/", puedeGestionarEventos, crearEventoElectoral);
+router.put("/:id", puedeGestionarEventos, actualizarEventoElectoral);
+router.delete("/:id", puedeGestionarEventos, eliminarEventoElectoral);
 
 module.exports = router;
