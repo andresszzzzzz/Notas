@@ -34,5 +34,6 @@ router.use("/solicitudes-registro", require("./SolicitudRegistro.routes"));
 router.use("/uploads", require("./upload.routes"));
 router.use("/reportes", require("./reportes.routes"));
 
-module.exports = router;
+router.use("/reportes", require("./reportes.routes"));
+router.use("/documentos", require("./documentos.routes"));
 module.exports = router;
