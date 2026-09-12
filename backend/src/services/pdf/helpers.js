@@ -1,18 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const { CARPETA_UPLOADS } = require('../../../middlewares/upload');
+const { CARPETA_UPLOADS } = require('../../middlewares/upload');
 
-// Convierte una ruta pública guardada en BD (ej: "/uploads/instituciones/escudo.png")
-// a una ruta absoluta en disco. Devuelve null si no existe el archivo,
-// para que el PDF se genere igual aunque falte una imagen (escudo, firma, foto, etc).
 const rutaAbsoluta = (rutaPublicaImg) => {
   if (!rutaPublicaImg || !rutaPublicaImg.startsWith('/uploads/')) return null;
   const absoluta = path.join(CARPETA_UPLOADS, rutaPublicaImg.replace('/uploads/', ''));
   return fs.existsSync(absoluta) ? absoluta : null;
 };
 
-// Dibuja una imagen solo si existe en disco; si algo falla al renderizarla
-// (formato corrupto, etc.) no se rompe la generación del documento completo.
 const dibujarImagenSiExiste = (doc, rutaPublicaImg, x, y, opciones = {}) => {
   const ruta = rutaAbsoluta(rutaPublicaImg);
   if (!ruta) return false;
@@ -31,7 +26,7 @@ const ETIQUETA_ROL = {
   admin: 'Personal Administrativo'
 };
 
-// --- Encabezado institucional compartido por constancias y certificados ---
+
 const dibujarEncabezado = (doc, institucion, tituloDocumento) => {
   dibujarImagenSiExiste(doc, institucion?.imagenes?.escudo, 40, 35, { width: 55, height: 55 });
 
@@ -74,11 +69,82 @@ const piePagina = (doc) => {
   );
 };
 
+// --- Utilidades para reportes tabulares (listados, planillas, estadísticas, etc.) ---
+
+// Encabezado compacto para reportes de tabla (distinto del de constancias/certificados,
+// que es más ceremonial). Recibe líneas de información libres (grupo, año, período, etc.)
+const dibujarEncabezadoReporte = (doc, institucion, tituloReporte, lineasInfo = []) => {
+  dibujarImagenSiExiste(doc, institucion?.imagenes?.escudo, 40, 30, { width: 45, height: 45 });
+
+  doc.fontSize(12).font('Helvetica-Bold')
+    .text(institucion?.nombre || 'Institución Educativa', 95, 32, { width: 420 });
+  doc.fontSize(8).font('Helvetica')
+    .text(`NIT: ${institucion?.nit || '-'}   DANE: ${institucion?.dane || '-'}`, 95, 48, { width: 420 });
+
+  doc.fontSize(11).font('Helvetica-Bold')
+    .text(tituloReporte.toUpperCase(), 40, 85, { align: 'center', width: 515 });
+
+  let y = 104;
+  doc.fontSize(9).font('Helvetica');
+  lineasInfo.forEach((linea) => {
+    doc.text(linea, 40, y, { width: 515 });
+    y += 12;
+  });
+
+  doc.moveTo(40, y + 2).lineTo(555, y + 2).stroke();
+  doc.y = y + 10;
+  doc.x = 40;
+  return doc.y;
+};
+
+const dibujarTabla = (doc, { x = 40, y, columnas, filas, limiteInferior = 780 }) => {
+  let posY = y ?? doc.y;
+  const anchoTotal = columnas.reduce((suma, col) => suma + col.width, 0);
+
+  const dibujarEncabezadoTabla = () => {
+    doc.font('Helvetica-Bold').fontSize(8.5);
+    let posX = x;
+    columnas.forEach((col) => {
+      doc.text(col.header, posX, posY, { width: col.width, align: col.align || 'left' });
+      posX += col.width;
+    });
+    posY += 15;
+    doc.moveTo(x, posY - 3).lineTo(x + anchoTotal, posY - 3).stroke();
+  };
+
+  dibujarEncabezadoTabla();
+  doc.font('Helvetica').fontSize(8.5);
+
+  filas.forEach((fila) => {
+    if (posY > limiteInferior) {
+      doc.addPage();
+      posY = 40;
+      dibujarEncabezadoTabla();
+      doc.font('Helvetica').fontSize(8.5);
+    }
+    let posX = x;
+    columnas.forEach((col, i) => {
+      const valor = fila[i];
+      doc.text(valor === null || valor === undefined ? '-' : String(valor), posX, posY, {
+        width: col.width,
+        align: col.align || 'left'
+      });
+      posX += col.width;
+    });
+    posY += 14;
+  });
+
+  doc.moveTo(x, posY).lineTo(x + anchoTotal, posY).stroke();
+  return posY + 10;
+};
+
 module.exports = {
   rutaAbsoluta,
   dibujarImagenSiExiste,
   ETIQUETA_ROL,
   dibujarEncabezado,
   dibujarFirmas,
-  piePagina
+  piePagina,
+  dibujarEncabezadoReporte,
+  dibujarTabla
 };

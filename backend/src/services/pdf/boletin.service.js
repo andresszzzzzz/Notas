@@ -15,7 +15,7 @@ const PDFDocument = require('pdfkit');
 //   promedioGeneral: number
 // }
 const generarBoletinPeriodoPDF = (res, datos) => {
-  const { institucion, anioAcademico, periodoInfo, grupo, estudiante, areas, promedioGeneral } = datos;
+  const { estudiante, periodoInfo } = datos;
 
   const doc = new PDFDocument({ size: 'A4', margin: 40 });
 
@@ -25,6 +25,14 @@ const generarBoletinPeriodoPDF = (res, datos) => {
     `inline; filename="boletin-${estudiante.documento || estudiante.nombreCompleto}-p${periodoInfo.numero}.pdf"`
   );
   doc.pipe(res);
+
+  dibujarCuerpoBoletin(doc, datos);
+
+  doc.end();
+};
+
+const dibujarCuerpoBoletin = (doc, datos) => {
+  const { institucion, anioAcademico, periodoInfo, grupo, estudiante, areas, promedioGeneral } = datos;
 
   // --- Encabezado institucional ---
   doc.fontSize(14).font('Helvetica-Bold').text(institucion.nombre || 'Institución Educativa', { align: 'center' });
@@ -102,8 +110,7 @@ const generarBoletinPeriodoPDF = (res, datos) => {
     `Documento generado automáticamente el ${new Date().toLocaleDateString('es-CO')}`,
     { align: 'center' }
   );
-
-  doc.end();
 };
 
-module.exports = { generarBoletinPeriodoPDF };
+module.exports = { generarBoletinPeriodoPDF, dibujarCuerpoBoletin };
+ 
