@@ -1,6 +1,6 @@
 const anioacademico = require("../models/AnioAcademico");
 const Matricula = require("../models/Matricula");
-const { calcularResultadosAnio, ejecutarCierreAnio } = require("../services/promocionService");
+const { calcularResultadosAnio, ejecutarCierreAnio } = require("../services/promocion.service");
 
 // Obtener todos los años académicos
 const obtenerAnios = async (req, res) => {

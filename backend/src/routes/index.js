@@ -35,3 +35,4 @@ router.use("/uploads", require("./upload.routes"));
 router.use("/reportes", require("./reportes.routes"));
 
 module.exports = router;
+module.exports = router;

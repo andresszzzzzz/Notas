@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { CARPETA_UPLOADS } = require('../../../middlewares/upload');
+const { CARPETA_UPLOADS } = require('../../middlewares/upload');
 
 // Convierte una ruta pública guardada en BD (ej: "/uploads/instituciones/escudo.png")
 // a una ruta absoluta en disco. Devuelve null si no existe el archivo,

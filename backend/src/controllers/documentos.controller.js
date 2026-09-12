@@ -8,7 +8,7 @@ const {
   generarConstanciaPDF,
   generarCertificadoPDF,
   generarCarnetPDF
-} = require('../services/pdf/documentos');
+ } = require('../services/pdf');
 
 // Estos documentos solo existen para estos 3 perfiles. Cualquier otro rol
 // (acudiente, rector, coordinador, dirNucleo) recibe un 400 al pedirlos.
