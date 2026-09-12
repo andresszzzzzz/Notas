@@ -81,10 +81,36 @@ const eliminarInstitucion = async (req, res) => {
   }
 };
 
+// Actualizar solo la configuración académica de una institución
+// (notaMinima, notaMaxima, numeroPeriodos, niveles, pierdeAnoPor, etc.)
+// Hace merge sobre la configuración existente en vez de reemplazarla completa,
+// para no perder campos que el frontend no haya enviado en esta petición.
+const actualizarConfiguracion = async (req, res) => {
+  try {
+    const institucion = await Institucion.findById(req.params.id);
+
+    if (!institucion) {
+      return res.status(404).json({ mensaje: 'Institución no encontrada' });
+    }
+
+    institucion.configuracion = {
+      ...institucion.configuracion.toObject(),
+      ...req.body
+    };
+
+    const institucionActualizada = await institucion.save();
+
+    res.json(institucionActualizada);
+  } catch (error) {
+    res.status(400).json({ mensaje: 'Error al actualizar la configuración', error: error.message });
+  }
+};
+
 module.exports = {
   obtenerInstituciones,
   obtenerInstitucionPorId,
   crearInstitucion,
   actualizarInstitucion,
   eliminarInstitucion,
+  actualizarConfiguracion,
 };
