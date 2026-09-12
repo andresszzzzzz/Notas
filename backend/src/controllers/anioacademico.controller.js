@@ -1,4 +1,6 @@
 const anioacademico = require("../models/AnioAcademico");
+const Matricula = require("../models/Matricula");
+const { calcularResultadosAnio, ejecutarCierreAnio } = require("../services/promocionService");
 
 // Obtener todos los años académicos
 const obtenerAnios = async (req, res) => {
@@ -224,6 +226,75 @@ const eliminarPeriodo = async (req, res) => {
   }
 };
 
+// GET /api/anios-academicos/:id/promocion/previsualizar
+// Calcula promovidos/reprobados SIN guardar nada. Sirve para que secretaría
+// revise el resultado antes de ejecutar el cierre definitivo.
+const previsualizarCierre = async (req, res) => {
+  try {
+    const reporte = await calcularResultadosAnio(req.params.id);
+    res.json(reporte);
+  } catch (error) {
+    res.status(error.status || 500).json({
+      mensaje: error.message || "Error al calcular la previsualización de cierre",
+    });
+  }
+};
+
+// POST /api/anios-academicos/:id/promocion/cierre
+// Ejecuta el cierre de año: marca cada matrícula como promovido/no promovido,
+// cambia el estado del año académico a 'finalizado' y, si se envía un
+// mapeo de grupos, crea automáticamente la matrícula del siguiente año
+// para los estudiantes promovidos.
+//
+// Body esperado:
+// {
+//   "forzar": false,                 // opcional, permite cerrar con períodos abiertos
+//   "mapeoGrupos": [                  // opcional, para matricular al año siguiente
+//     { "grupoActualId": "...", "grupoSiguienteId": "..." }
+//   ]
+// }
+const cerrarAnio = async (req, res) => {
+  try {
+    const { forzar, mapeoGrupos } = req.body;
+    const reporte = await ejecutarCierreAnio(req.params.id, { forzar, mapeoGrupos });
+
+    res.json({
+      mensaje: "Cierre de año ejecutado correctamente",
+      ...reporte,
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      mensaje: error.message || "Error al ejecutar el cierre de año",
+    });
+  }
+};
+
+// GET /api/anios-academicos/:id/promocion/listado?tipo=promovidos|reprobados|todos
+// Lista, a partir de las matrículas ya actualizadas por el cierre, quiénes
+// quedaron promovidos y quiénes no. Requiere haber ejecutado /cierre antes
+// (si no, el campo "promovido" de la matrícula todavía es null).
+const listadoPromocion = async (req, res) => {
+  try {
+    const { tipo = "todos" } = req.query;
+
+    const filtro = { anioAcademicoId: req.params.id, estado: "activa" };
+    if (tipo === "promovidos") filtro.promovido = true;
+    if (tipo === "reprobados") filtro.promovido = false;
+
+    const matriculas = await Matricula.find(filtro)
+      .populate("estudianteId", "nombres apellidos documento")
+      .populate("grupoId", "nombre grado")
+      .sort({ "grupoId.grado": 1 });
+
+    res.json(matriculas);
+  } catch (error) {
+    res.status(500).json({
+      mensaje: "Error al obtener el listado de promoción",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   obtenerAnios,
   obtenerAniosPorInstitucion,
@@ -235,4 +306,7 @@ module.exports = {
   agregarPeriodo,
   actualizarPeriodo,
   eliminarPeriodo,
+  previsualizarCierre,
+  cerrarAnio,
+  listadoPromocion,
 };
