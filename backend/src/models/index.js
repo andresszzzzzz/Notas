@@ -11,6 +11,7 @@ module.exports = {
   Indicador: require('./Indicador'),
   Actividad: require('./Actividad'),
   Calificacion: require('./Calificacion'),
+  Asistencia: require('./Asistencia'),
   DireccionNucleo: require('./DireccionNucleo'),
   Bitacora: require('./Bitacora'),
   Observador: require('./Observador'),
