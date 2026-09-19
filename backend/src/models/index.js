@@ -12,6 +12,7 @@ module.exports = {
   Actividad: require('./Actividad'),
   Calificacion: require('./Calificacion'),
   Asistencia: require('./Asistencia'),
+  Horario: require('./Horario'),
   DireccionNucleo: require('./DireccionNucleo'),
   Bitacora: require('./Bitacora'),
   Observador: require('./Observador'),

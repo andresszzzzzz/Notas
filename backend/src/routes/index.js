@@ -19,6 +19,8 @@ router.use("/prematriculas", require("./prematricula.routes"));
 router.use("/indicadores", require("./indicador.routes"));
 router.use("/actividades", require("./Actividad.routes"));
 router.use("/calificaciones", require("./calificacion.routes"));
+router.use("/asistencia", require("./asistencia.routes"));
+router.use("/horarios", require("./horario.routes"));
 router.use("/direccion-nucleo", require("./direccionnucleo.routes"));
 router.use("/bitacora", require("./Bitacora.routes"));
 router.use("/observador", require("./observador.routes"));
